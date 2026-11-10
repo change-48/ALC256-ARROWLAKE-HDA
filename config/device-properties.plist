@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  config.plist -> DeviceProperties -> Add 里与音频有关的两个条目。
+
+  PciRoot(0x0)/Pci(0x1f,0x3)  = HDEF / HDAS（本机 ACPI 路径 _SB.PC00.HDAS@1f0003）
+
+   layout-id       97            : AppleALC 用（本机最终禁用，保留以便切回 AppleHDA 路线）
+   voodoo-layout-id 61 00 00 00  : VoodooHDA 用，等价于 97（0x61）。属性优先级高于 PCI layout-id，
+                                   是 "layout-id 被 AppleALC 写成 7、导致 VoodooHDA 用错表" 的修复手段。
+
+  另有 boot-args: voodoo-layout-id=97（最高优先级），与这里互为双保险。
+-->
+<plist version="1.0">
+<dict>
+  <key>PciRoot(0x0)/Pci(0x1f,0x3)</key>
+  <dict>
+    <key>layout-id</key>
+    <integer>97</integer>
+    <key>voodoo-layout-id</key>
+    <data>YQAAAA==</data>
+  </dict>
+</dict>
+</plist>

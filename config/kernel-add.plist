@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  OpenCore config.plist -> Kernel -> Add 里需要的那一条。
+  位置：放在 Lilu 之后即可；本机实测在 AppleALC 之后（索引 9）。
+  注意：AppleALC.kext 与 SimpleHDA.kext 必须 Enabled = false，避免与 VoodooHDA 抢设备。
+-->
+<plist version="1.0">
+<dict>
+  <key>Arch</key>
+  <string>x86_64</string>
+  <key>BundlePath</key>
+  <string>VoodooHDA_BL.kext</string>
+  <key>Comment</key>
+  <string>VoodooHDA 3.7.0 BL (IOAudioFamily embedded), Arrow Lake-H HDA 8086:7728</string>
+  <key>Enabled</key>
+  <true/>
+  <key>ExecutablePath</key>
+  <string>Contents/MacOS/VoodooHDA_BL</string>
+  <key>MaxKernel</key>
+  <string>25.99.99</string>
+  <key>MinKernel</key>
+  <string>25.0.0</string>
+  <key>PlistPath</key>
+  <string>Contents/Info.plist</string>
+</dict>
+</plist>
