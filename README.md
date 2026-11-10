@@ -52,6 +52,24 @@ Line In:
 
 ---
 
+## 仓库内容
+
+| 路径 | 内容 |
+| --- | --- |
+| [`dist/VoodooHDA_BL.kext`](dist/) | 已按本文改好的 kext（**只改 `Info.plist`，可执行文件未动**），附 `SHA256SUMS` 与出处说明 |
+| [`scripts/apply-patch.py`](scripts/apply-patch.py) | 把同样的改动应用到你自己手里的 VoodooHDA BL 变体（幂等、先备份、支持 `--dry-run`） |
+| [`scripts/audio-check.sh`](scripts/audio-check.sh) | 一键自检：驱动 / 设备 / HDEF 属性 / 实例数 / 音量 / 驱动内部日志 |
+| [`config/`](config/) | OpenCore `Kernel → Add` 条目、`DeviceProperties` 片段、kext 键值对照表 |
+| [`docs/`](docs/) | 路线 A 证据链、路线 B 两个坑（附源码行号）、codec 拓扑与控件表 |
+| [`third_party/`](third_party/) | VoodooHDA 的 BSD-2-Clause 许可全文 |
+
+二进制在仓库里的理由：这套配置能不能复现，很大程度取决于**改的是哪一份 kext**。
+BL 变体的 `IOAudioFamily` 是编译进本体的，不同来源的 build 细节不同，光给一份 plist 片段
+容易对不上。所以这里放的是"出处 + 哈希 + 只改 plist"的完整副本，并同时保留 `apply-patch.py`，
+两条路都通。上游许可见 [`third_party/`](third_party/)。
+
+---
+
 ## 两条路线
 
 ### 路线 A：AppleHDA / AppleALC —— 此控制器上不通
@@ -136,11 +154,16 @@ codec 拓扑里两条 DAC 分头喂不同的脚：`DAC3 → 0x1B + 耳机`，`DA
 
 ## 复现步骤
 
-1. 取 **VoodooHDA 3.7.0 BL**（内嵌 IOAudioFamily 的、可被 OpenCore 注入的变体，
-   例如 chris1111 的 `VoodooHDA_BL.kext`）。LE 变体依赖系统 `IOAudioFamily`，引导阶段注入会因
-   `Vtable patching failed` / `Invalid Parameter` 失败。
-2. 放进 `EFI/OC/Kexts/`，`Kernel → Add` 加一条（顺序在 Lilu 之后即可，`AppleALC`/`SimpleHDA` 关掉）。
-3. 按上表改 kext 的 `Info.plist`（`LayoutId`、`NodesToPatch`、两个 Fix 开关）。
+1. **拿到 kext**（二选一）：
+   - 直接用 [`dist/VoodooHDA_BL.kext`](dist/)（先 `shasum -a 256 -c SHA256SUMS` 校验）；
+   - 或者自己找一份 VoodooHDA 3.7.0 **BL** 变体（内嵌 `IOAudioFamily`、可被 OpenCore 注入），
+     然后 `python3 scripts/apply-patch.py /path/to/VoodooHDA_BL.kext`。
+     注意 LE 变体依赖系统 `IOAudioFamily`，引导阶段注入会因 `Vtable patching failed` /
+     `Invalid Parameter` 失败。
+2. 放进 `EFI/OC/Kexts/`，`Kernel → Add` 加一条（顺序在 Lilu 之后即可，`AppleALC`/`SimpleHDA` 关掉），
+   条目照抄 [`config/kernel-add.plist`](config/kernel-add.plist)。
+3. 若用的是 `dist/` 里的 kext，**这一步已经做完**；否则用 `apply-patch.py` 改
+   `LayoutId`、`NodesToPatch`、两个 Fix 开关（[`config/voodoohda-keys.md`](config/voodoohda-keys.md) 有对照表）。
 4. `DeviceProperties` 给 HDEF 加 `voodoo-layout-id`，boot-args 加同名参数。
 5. 重启，跑 `scripts/audio-check.sh` 看设备；出声不对就 `sudo vhda_msgbuf` 读驱动内部日志。
 
